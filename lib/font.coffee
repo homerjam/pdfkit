@@ -12,6 +12,9 @@ class PDFFont
     constructor: (@document, @filename, @family, @id) ->
         if @filename in @_standardFonts
             @embedStandard()
+
+        else if /\.afm$/i.test @filename           
+            @embedAFM()
             
         else if /\.(ttf|ttc)$/i.test @filename
             @ttf = TTFFont.open @filename, @family
@@ -163,15 +166,21 @@ class PDFFont
             end
             end
         '''
-                    
+
+    embedAFM: ->
+        @_embedAFM @filename, @family
+
     embedStandard: ->
+        @_embedAFM __dirname + "/font/data/#{@filename}.afm", @filename
+
+    _embedAFM: (fileName, fontName) ->
         @isAFM = true
-        font = AFMFont.open __dirname + "/font/data/#{@filename}.afm"
+        font = AFMFont.open fileName
         {@ascender,@decender,@bbox,@lineGap,@charWidths} = font
         
         @ref = @document.ref
             Type: 'Font'
-            BaseFont: @filename
+            BaseFont: fontName
             Subtype: 'Type1'
             
     _standardFonts: [
